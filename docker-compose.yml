@@ -1,13 +1,48 @@
 ﻿services:
+  db:
+    image: mysql:8.4
+    container_name: wordpress_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wordpress_nguyenanhquy
+      MYSQL_USER: Quy
+      MYSQL_PASSWORD: UserPass@123
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/wordpress_hoten.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress_app
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8000:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: wordpress_nguyenanhquy
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: rootpassword
+      WORDPRESS_TABLE_PREFIX: wp_
+    volumes:
+      - ./:/var/www/html
+
   phpmyadmin:
     image: phpmyadmin:latest
-    container_name: phpmyadmin_service
+    container_name: wordpress_phpmyadmin
     restart: always
+    depends_on:
+      - db
     ports:
       - "8080:80"
     environment:
-      PMA_HOST: host.docker.internal
+      PMA_HOST: db
       PMA_PORT: 3306
       PMA_ARBITRARY: 1
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+
+volumes:
+  db_data:
